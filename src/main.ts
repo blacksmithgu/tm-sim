@@ -2,7 +2,13 @@ import { DataSet, Network } from "vis-network/standalone";
 import { TMState, TMSpec, Rule, Direction, Tape } from "./tm";
 import { stateUrl, tapeTable } from "./render";
 
-const spec = new TMSpec(["a"], ["_", "0", "1"], [
+/** Utility methods */
+function isString(value: any): value is string {
+    return typeof value == 'string' || value instanceof String;
+}
+
+/** Actual implementation stuff. */
+let spec = new TMSpec(new Set(["a"]), new Set(["_", "0", "1"]), [
     Rule.create("a", "0", "0", Direction.Right, "a"),
     Rule.create("a", "1", "0", Direction.Right, "a")
 ]);
@@ -11,7 +17,7 @@ const terminalState = new TMState(new Tape(new Map([[0, "1"], [1, "1"], [2, "1"]
 let nodes = new DataSet([]);
 let edges = new DataSet([]);
 
-let currentId = 6;
+let currentId = 2;
 
 nodes.add([
     { id: 1, image: stateUrl(terminalState), shape: "image", state: terminalState, expanded: false, color: { border: "blue"} },
@@ -107,6 +113,8 @@ function simulateNode(id: string | number, times: number) {
             let state = nodes.get(id).state;
             let next = spec.next(state);
 
+            if (next == null) return;
+
             nodes.add([{ id: currentId, image: stateUrl(next), shape: "image", state: next, expanded: false }]);
             edges.add([{ id: currentId, from: currentId, to: id }]);
             id = currentId;
@@ -121,7 +129,7 @@ network.on("doubleClick", function(params) {
 
     // Figure out the current node which we clicked on.
     let node = <number> params.nodes[0];
-    reverseNode(node, 2);
+    reverseNode(node, 1);
 });
 
 network.on("select", function(params) {
@@ -158,3 +166,53 @@ for (let simNum of [1, 5, 10, 25, 100]) {
         for (let id of selection) simulateNode(id, simNum);
     });
 }
+
+/** Set up the handler for parsing the TM spec and initializing the singleton state. */
+const initStateInput = <HTMLInputElement> document.getElementById("tm-state-input");
+const initHeadInput = <HTMLInputElement> document.getElementById("tm-head-input");
+const initTapeInput = <HTMLInputElement> document.getElementById("tm-tape-input");
+const defSymbolInput = <HTMLInputElement> document.getElementById("tm-spec-default-input");
+const ruleInput = <HTMLTextAreaElement> document.getElementById("tm-spec-rules-input");
+const errorOutput = document.getElementById("tm-spec-error");
+
+document.getElementById("tm-spec-update").addEventListener("click", ev => {
+    // Lots of ugly parsing we need to do; if we encounter errors at any point, we quit.
+    let initState = initStateInput.value;
+    let defaultSymbol = defSymbolInput.value;
+    let initHead = parseInt(initHeadInput.value);
+    if (isNaN(initHead)) {
+        errorOutput.innerText = "Invalid head location: " + initHeadInput.value;
+        return;
+    }
+
+    let initTape = Tape.parse(initTapeInput.value, defaultSymbol, initHead);
+    if (isString(initTapeInput)) {
+        errorOutput.innerText = "Invalid tape: " + initTapeInput;
+        return;
+    }
+
+    // TODO: Allow for terminated states. MB.
+    let newState = new TMState(initTape, initState, false);
+
+    let pspec = TMSpec.parse(ruleInput.value, defaultSymbol);
+    if (isString(pspec)) {
+        errorOutput.innerText = pspec;
+        return;
+    }
+
+    if (!pspec.states.has(initState)) {
+        errorOutput.innerText = "Unrecognized initial state: " + initState + " (valid options are " + Array.from(pspec.states).join(",") + ")";
+        return;
+    }
+
+    // If we parsed everything successfuly, reset the simulation.
+    spec = pspec;
+    currentId = 2;
+
+    nodes.clear();
+    edges.clear();
+
+    nodes.add([
+        { id: 1, image: stateUrl(newState), shape: "image", state: newState, expanded: false, color: { border: "blue"} },
+    ]);
+});

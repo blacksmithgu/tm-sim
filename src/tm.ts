@@ -38,6 +38,17 @@ export class Tape {
     /** The index of the head in the tape (i.e., where we are in the tape). */
     public readonly head: number;
 
+    /** Attempt to parse the input comma separated list as a tape. On failure, returns a string error. */
+    static parse(input: string, defaultSym: string, head: number): Tape {
+        let parts = input.trim().split(",");
+        let result = new Map<number, string>();
+        for (let [index, value] of parts.entries()) {
+            if (value != defaultSym) result.set(index, value);
+        }
+
+        return new Tape(result, defaultSym, head);
+    }
+
     constructor(data: Map<number, string>, defaultSymbol: string, head: number) {
         this.data = data;
         this.defaultSymbol = defaultSymbol;
@@ -152,13 +163,47 @@ export namespace Rule {
 /** A turing machine specification, consisting of a number of rules, symbols, and states. */
 export class TMSpec {
     /** The list of possible states that this TM can take on. */
-    public readonly states: string[];
+    public readonly states: Set<string>;
     /** The list of possible symbols that this TM can take on. */
-    public readonly symbols: string[];
+    public readonly symbols: Set<string>;
     /** The list of rules in this specification. */
     public readonly rules: Rule[];
 
-    constructor(states: string[], symbols: string[], rules: Rule[]) {
+    static RULE_REGEX = /(\w+)\s*,\s*(\w+)\s*->\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)/;
+
+    /**
+     * Attempt to parse a newline-delimited input (where each line is a rule of the form
+     * state, symbol -> symbol, direction, state) into a TM specification. Return a string on failure.
+     * */
+    static parse(input: string, defaultSym: string): TMSpec | string {
+        // TODO: Consider using a javascript set to speed this up.
+        let symbols: Set<string> = new Set([defaultSym]);
+        let states: Set<string> = new Set();
+        let rules: Rule[] = [];
+
+        for (let line of input.split("\n")) {
+            if (!line || line.trim().length == 0) continue;
+
+            let match = line.trim().match(this.RULE_REGEX);
+            if (!match) return "Invalid rule format: " + line;
+
+            let trigState = match[1], trigSym = match[2];
+            let resultSym = match[3], resultDir = match[4], resultState = match[5];
+
+            // Add the symbols to the result state.
+            symbols.add(trigSym); symbols.add(resultSym);
+            states.add(trigState); states.add(resultState);
+
+            let dir = Direction.parse(resultDir);
+            if (!dir) return "Invalid direction: " + dir;
+
+            rules.push(Rule.create(trigState, trigSym, resultSym, dir, resultState));
+        }
+
+        return new TMSpec(states, symbols, rules);
+    }
+
+    constructor(states: Set<string>, symbols: Set<string>, rules: Rule[]) {
         this.states = states;
         this.symbols = symbols;
         this.rules = rules;
