@@ -42,25 +42,27 @@
             <center><h2>Configuration</h2></center>
             <div id="tm-initial" style="display: flex; flex-direction: column;">
                 <div style="display: flex; padding-top: 10px;">
-                    <label>Initial State</label>
+                    <label class="tooltip">Initial State <span class="tooltiptext">The initial state of the Turing Machine.</span></label>
                     <input id="tm-state-input" type="text" style="flex: 2;">
                 </div>
                 <div style="display: flex; padding-top: 10px;">
-                    <label>Head Location</label>
+                    <label class="tooltip">Head Location <span class="tooltiptext">Index on the tape the head will start at.</span></label>
                     <input id="tm-head-input" type="number" style="flex: 2;">
                 </div>
                 <div style="display: flex; padding-top: 10px;">
-                <label>Tape</label>
+                <label class="tooltip">Tape <span class="tooltiptext">Comma separated entries on the starting tape. ex) 0, 0, 0, 1</span></label>
                 <input id="tm-tape-input" type="text" style="flex:2">
                 </div>
             </div>
             <hr width="100%">
             <div id="tm-spec" style="display: flex; flex-direction: column;">
                 <div style="display: flex;">
-                    <label>Default Symbol</label>
+                    <label class="tooltip">Default Symbol <span class="tooltiptext">The symbol that pads the end of the tape.</span></label>
                     <input id="tm-spec-default-input" type="text" style="flex: 2;">
                 </div>
-                <center><label style="padding-top:10px;">Rules</label></center>
+                <center><label style="padding-top:10px;" class="tooltip">Rules
+                    <span class="tooltiptext">Specify one rule per line.<br> state, value -> new value, direction (L, R), new state<br> ex) a, 0 -> 1, L, b</span>
+                </label></center>
                 <div style="display: flex; height: 100%">
                     <textarea id="tm-spec-rules-input" style="flex: 1; resize: none;"></textarea>
                 </div>

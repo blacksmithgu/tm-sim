@@ -18,7 +18,7 @@ html, body, #graph, div.vis-network {
 label {
     font: 120% bold;
     color: white;
-    padding-right: 10px;
+    margin-right: 10px;
 }
 
 button {
@@ -36,6 +36,32 @@ h1, h2, h3 {
 input {
     padding: 4px;
     font-family: 'Courier New', Courier, monospace;
+}
+
+/* Tooltip Settings */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted white;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 10vw;
+    background-color: #222222;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    font-size: 1vw;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
 }
 
 /* Tm Menu Settings */
