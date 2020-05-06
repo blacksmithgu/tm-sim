@@ -38,6 +38,11 @@ input {
     font-family: 'Courier New', Courier, monospace;
 }
 
+/* Tm Menu Settings */
+#tm-menu input {
+    min-width: 0;
+}
+
 /* Node action bar settings. */
 #node-menu {
     width: 60%;
