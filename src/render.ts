@@ -114,13 +114,16 @@ export function tapeTable(tape: Tape): string {
     let [array, minIndex] = tapeAsArray(tape);
     let result: string[] = [];
     result.push("<table>");
+    result.push("<caption>", "Full Tape", "</caption>");
     result.push("<tr>");
     for (let index = minIndex; index < minIndex + array.length; index++)
-        result.push("<td>", index.toString(), "</td>");
+        result.push("<td class='indexRow'>", index.toString(), "</td>");
     result.push("</tr>");
     result.push("<tr>");
     for (let index = minIndex; index < minIndex + array.length; index++)
-        result.push("<td>", tape.symbolAt(index), "</td>");
+        if (index == tape.head) {
+            result.push("<td class='headCell'>", tape.symbolAt(index), "</td>")
+        } else { result.push("<td>", tape.symbolAt(index), "</td>"); }
     result.push("</tr>");
     result.push("</table>");
 
