@@ -9,7 +9,7 @@ const SVG_TAPE_PADDING = 8;
 const SVG_HEIGHT = 100;
 
 /** Render state as an SVG, given a desired number of visible nodes. */
-function renderSvg(state: string, start: number, tape: string[]): string {
+function renderSvg(state: string, start: number, tape: string[], head: number): string {
     // Compute the locations of the seperating lines and tape values first.
     let tapeContent = "";
 
@@ -20,6 +20,12 @@ function renderSvg(state: string, start: number, tape: string[]): string {
     for (let i = 0; i < tape.length - 1; i++) {
         let x = SVG_TAPE_PADDING + (i + 1) * SVG_TAPE_ENTRY_WIDTH;
         tapeContent += `<line x1="${x}" x2="${x}" y1="60%" y2="90%" class="tape"/>`;
+    }
+
+    // Add a rectangle marking the head position
+    if (head >= start && head < tape.length) {
+        let x = SVG_TAPE_PADDING + head * SVG_TAPE_ENTRY_WIDTH;
+        tapeContent += `<rect x="${x}" width="${SVG_TAPE_ENTRY_WIDTH}" y="60%" height="30%" class="head" fill="#ffffff"/>`;
     }
 
     // Add the actual tape values.
@@ -63,6 +69,12 @@ function renderSvg(state: string, start: number, tape: string[]): string {
       stroke-width: 2;
       fill: none;
     }
+    
+    .head {
+      stroke: darkred;
+      stroke-width: 2;
+      fill: none;
+    }
   </style>
   <text x="50%" y="30%" class="heavy">${state}</text>
   ${tapeContent}
@@ -89,7 +101,7 @@ function stateUrl(state: TMState): string {
     for (let index = minIndex; index <= maxIndex; index++)
         tape.push(state.tape.symbolAt(index));
 
-    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(renderSvg(realState, minIndex, tape));
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(renderSvg(realState, minIndex, tape, state.tape.head));
 }
 
 const spec = new TMSpec(["a"], ["_", "0", "1"], [
