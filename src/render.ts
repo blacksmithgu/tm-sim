@@ -22,8 +22,8 @@ export function renderSvg(state: string, start: number, tape: string[], head: nu
     }
 
     // Add a rectangle marking the head position
-    if (head >= start && head < tape.length) {
-        let x = SVG_TAPE_PADDING + head * SVG_TAPE_ENTRY_WIDTH;
+    if (head >= start && head < start + tape.length) {
+        let x = SVG_TAPE_PADDING + (head - start) * SVG_TAPE_ENTRY_WIDTH;
         tapeContent += `<rect x="${x}" width="${SVG_TAPE_ENTRY_WIDTH}" y="60%" height="30%" class="head" fill="#ffffff"/>`;
     }
 
@@ -83,21 +83,20 @@ export function renderSvg(state: string, start: number, tape: string[], head: nu
 /** Converts a map-based tape into a contiguous array; includes a start index in the result. */
 export function tapeAsArray(tape: Tape): [string[], number] {
     // Find the minimum index.
-    let minIndex = 999999999;
-    let maxIndex = -9999999999;
+    let minIndex = tape.head;
+    let maxIndex = tape.head;
     for (let [key, _] of tape.data) {
         minIndex = Math.min(minIndex, key);
         maxIndex = Math.max(maxIndex, key);
     }
 
-    if (tape.data.size == 0) {
-        minIndex = 0;
-        maxIndex = -1;
-    }
-
     let result: string[] = [];
     for (let index = minIndex; index <= maxIndex; index++)
         result.push(tape.symbolAt(index));
+
+    console.log(minIndex, maxIndex)
+    console.log(tape);
+    console.log(result);
 
     return [result, minIndex];
 }

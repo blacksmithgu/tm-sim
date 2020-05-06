@@ -215,4 +215,19 @@ document.getElementById("tm-spec-update").addEventListener("click", ev => {
     nodes.add([
         { id: 1, image: stateUrl(newState), shape: "image", state: newState, expanded: false, color: { border: "blue"} },
     ]);
+
+    network.focus(1, { locked: false });
+});
+
+/** Set up handler for toggling the configuration menu. */
+let configDiv = document.getElementById("tm-menu");
+document.getElementById("config-toggle").addEventListener("click", ev => {
+    if (configDiv.style.display == "none") configDiv.style.display = "flex";
+    else configDiv.style.display = "none";
+});
+
+/** Set up handler for expanding every visible node by 1 level. */
+document.getElementById("tm-reverse-all").addEventListener("click", ev => {
+    let nodeIds = nodes.get().map(obj => obj.id);
+    for (let node of nodeIds) reverseNode(node, 1);
 });

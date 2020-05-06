@@ -137,7 +137,7 @@ input {
     width: 25%;
     position: fixed;
     z-index: 1;
-    top: 20px;
+    top: 60px;
     right: 20px;
 
     background-color: #111111;
@@ -152,4 +152,19 @@ input {
 
 #tm-spec {
     flex: 1;
+}
+
+/** TM Commands. */
+#tm-commands {
+    max-height: 60px;
+    position: fixed;
+    z-index: 1;
+
+    top: 10px;
+    right: 20px;
+
+    background-color: #111111;
+    border: 2px solid #eeeeee;
+
+    padding: 10px;
 }

@@ -39,7 +39,7 @@
 
         <!-- TM Specification Dialog; provides the Turing Machine specification and initial state. -->
         <div id="tm-menu">
-            <center><h2>Configuration</h2></center>
+            <center><h3 style="margin-bottom: 2px;">Configuration</h3></center>
             <div id="tm-initial" style="display: flex; flex-direction: column;">
                 <div style="display: flex; padding-top: 10px;">
                     <label class="tooltip">Initial State <span class="tooltiptext">The initial state of the Turing Machine.</span></label>
@@ -69,6 +69,12 @@
                 <center><button id="tm-spec-update" style="margin-top: 10px;">Update</button></center>
                 <center><label id="tm-spec-error" style="color: red; margin-top: 10px; margin-bottom: 10px;"></label></center>
             </div>
+        </div>
+
+        <!-- Extra Commands Dialog; sits right above the config dialog. -->
+        <div id="tm-commands">
+            <button id="tm-reverse-all">Expand All</button>
+            <button id="config-toggle">Configuration</button>
         </div>
 
         <script src="main.js"></script>
