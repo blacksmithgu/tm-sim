@@ -94,16 +94,12 @@ export function tapeAsArray(tape: Tape): [string[], number] {
     for (let index = minIndex; index <= maxIndex; index++)
         result.push(tape.symbolAt(index));
 
-    console.log(minIndex, maxIndex)
-    console.log(tape);
-    console.log(result);
-
     return [result, minIndex];
 }
 
 /** Render a state as an SVG image.  */
 export function stateUrl(state: TMState): string {
-    const realState = (state.terminated) ? "HALT" : state.state;
+    const realState = (state.terminated) ? "HALT (" + state.state + ")" : state.state;
     let [tape, minIndex] = tapeAsArray(state.tape);
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(renderSvg(realState, minIndex, tape, state.tape.head));
 }

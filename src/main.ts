@@ -8,9 +8,10 @@ function isString(value: any): value is string {
 }
 
 /** Actual implementation stuff. */
-let spec = new TMSpec(new Set(["a"]), new Set(["_", "0", "1"]), [
-    Rule.create("a", "0", "0", Direction.Right, "a"),
-    Rule.create("a", "1", "0", Direction.Right, "a")
+let spec = new TMSpec(new Set(["a", "b"]), new Set(["_", "0", "1"]), [
+    Rule.io("a", "0", "0", "b"),
+    Rule.io("a", "1", "0", "b"),
+    Rule.move("b", Direction.Right, "a")
 ]);
 const terminalState = new TMState(new Tape(new Map([[0, "1"], [1, "1"], [2, "1"], [3, "0"], [4, "1"], [5, "0"]]), "_", 0), "a", false);
 
@@ -112,7 +113,6 @@ function simulateNode(id: string | number, times: number) {
         } else {
             let state = nodes.get(id).state;
             let next = spec.next(state);
-
             if (next == null) return;
 
             nodes.add([{ id: currentId, image: stateUrl(next), shape: "image", state: next, expanded: false }]);
@@ -177,9 +177,9 @@ const errorOutput = document.getElementById("tm-spec-error");
 
 document.getElementById("tm-spec-update").addEventListener("click", ev => {
     // Lots of ugly parsing we need to do; if we encounter errors at any point, we quit.
-    let initState = initStateInput.value;
-    let defaultSymbol = defSymbolInput.value;
-    let initHead = parseInt(initHeadInput.value);
+    let initState = initStateInput.value.trim();
+    let defaultSymbol = defSymbolInput.value.trim();
+    let initHead = parseInt(initHeadInput.value.trim());
     if (isNaN(initHead)) {
         errorOutput.innerText = "Invalid head location: " + initHeadInput.value;
         return;

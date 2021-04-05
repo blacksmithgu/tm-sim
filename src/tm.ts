@@ -42,7 +42,8 @@ export class Tape {
     static parse(input: string, defaultSym: string, head: number): Tape {
         let parts = input.trim().split(",");
         let result = new Map<number, string>();
-        for (let [index, value] of parts.entries()) {
+        for (let [index, rawValue] of parts.entries()) {
+            let value = rawValue.trim();
             if (value != defaultSym) result.set(index, value);
         }
 
@@ -76,6 +77,16 @@ export class Tape {
         else newData.set(newHead, symbol);
 
         return new Tape(newData, this.defaultSymbol, newHead);
+    }
+
+    /** Move the head in the given direction. Returns a new Tape object. */
+    move(dir: Direction): Tape {
+        return this.writeAndMove(this.symbolAtHead(), dir);
+    }
+
+    /** Write a value at the head. Returns a new Tape object. */
+    writeAtHead(symbol: string): Tape {
+        return this.writeAndMove(symbol, Direction.Center);
     }
 
     /** Get the symbol at the given tape index. */
@@ -132,30 +143,44 @@ export interface StateSymbol {
     symbol: string;
 }
 
-/** A (state, direction, symbol) triple used as the result of a rule. */
-export interface RuleResult {
-    /** The state in the triple. */
-    state: string;
-    /** The direction in the triple. */
+export interface MoveRule {
+    type: 'move';
+
+    /** The state that triggers this movement rule. */
+    triggerState: string;
+    /** The direction to move when this rule is triggered. */
     direction: Direction;
-    /** The symbol in the triple. */
-    symbol: string;
+    /** The resulting state after the movement. */
+    resultState: string;
 }
 
-/** A rule in the Turing Machine. */
-export interface Rule {
+export interface IORule {
+    type: 'io';
+
     /** The triggering state and symbol. */
     trigger: StateSymbol;
-    /** The resulting state, direction to move in, and symbol to write. */
-    result: RuleResult;
+    /** The symbol to write and state to move to. */
+    result: StateSymbol;
 }
+
+export type Rule = MoveRule | IORule;
 
 export namespace Rule {
     /** Shorthand function for creating a rule. */
-    export function create(trigState: string, trigSymbol: string, resultSymbol: string, resultDir: Direction, resultState: string): Rule {
+    export function move(triggerState: string, direction: Direction, resultState: string): MoveRule {
         return {
-            trigger: { state: trigState, symbol: trigSymbol },
-            result: { state: resultState, direction: resultDir, symbol: resultSymbol }
+            type: 'move',
+            triggerState,
+            direction,
+            resultState
+        };
+    }
+
+    export function io(triggerState: string, triggerSymbol: string, resultSymbol: string, resultState: string): IORule {
+        return {
+            type: 'io',
+            trigger: { state: triggerState, symbol: triggerSymbol },
+            result: { state: resultState, symbol: resultSymbol }
         }
     }
 }
@@ -169,11 +194,16 @@ export class TMSpec {
     /** The list of rules in this specification. */
     public readonly rules: Rule[];
 
-    static RULE_REGEX = /(\w+)\s*,\s*(\w+)\s*->\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)/;
+    static MOVE_REGEX = /(\w+)\s*->\s*(\w+)\s*,\s*(\w+)/;
+    static IO_REGEX = /(\w+)\s*,\s*(\w+)\s*->\s*(\w+)\s*,\s*(\w+)/;
 
     /**
-     * Attempt to parse a newline-delimited input (where each line is a rule of the form
-     * state, symbol -> symbol, direction, state) into a TM specification. Return a string on failure.
+     * Attempt to parse a newline-delimited input into a TM specification. Return a string on failure.
+     * Lines can be one of two forms:
+     * state, symbol -> symbol, state (read/write rule)
+     * state -> direction, state (move rule)
+     * 
+     * Lines starting with '#' are comments and are ignored.
      * */
     static parse(input: string, defaultSym: string): TMSpec | string {
         // TODO: Consider using a javascript set to speed this up.
@@ -182,22 +212,36 @@ export class TMSpec {
         let rules: Rule[] = [];
 
         for (let line of input.split("\n")) {
-            if (!line || line.trim().length == 0) continue;
+            if (!line || line.trim().length == 0 || line.startsWith("#")) continue;
 
-            let match = line.trim().match(this.RULE_REGEX);
-            if (!match) return "Invalid rule format: " + line;
+            let ioMatch = line.trim().match(this.IO_REGEX);
+            if (ioMatch) {
+                let trigState = ioMatch[1], trigSym = ioMatch[2];
+                let resultSym = ioMatch[3], resultState = ioMatch[4];
 
-            let trigState = match[1], trigSym = match[2];
-            let resultSym = match[3], resultDir = match[4], resultState = match[5];
+                // Add the symbols to the result state.
+                symbols.add(trigSym); symbols.add(resultSym);
+                states.add(trigState); states.add(resultState);
 
-            // Add the symbols to the result state.
-            symbols.add(trigSym); symbols.add(resultSym);
-            states.add(trigState); states.add(resultState);
+                rules.push(Rule.io(trigState, trigSym, resultSym, resultState));
+                continue;
+            }
 
-            let dir = Direction.parse(resultDir);
-            if (!dir) return "Invalid direction: " + dir;
+            let moveMatch = line.trim().match(this.MOVE_REGEX);
+            if (moveMatch) {
+                let trigState = moveMatch[1], resultDir = moveMatch[2], resultState = moveMatch[3];
 
-            rules.push(Rule.create(trigState, trigSym, resultSym, dir, resultState));
+                let dir = Direction.parse(resultDir);
+                if (!dir) return "Invalid direction: " + dir;
+
+                // Add the symbols to the result state.
+                states.add(trigState); states.add(resultState);
+
+                rules.push(Rule.move(trigState, dir, resultState));
+                continue;
+            }
+
+            return "Invalid rule: " + line.trim();
         }
 
         return new TMSpec(states, symbols, rules);
@@ -219,8 +263,11 @@ export class TMSpec {
 
         for (let rule of this.rules) {
             // If we find a matching rule, then apply it immediately.
-            if (rule.trigger.state == state && rule.trigger.symbol == symbol)
-                return new TMState(curr.tape.writeAndMove(rule.result.symbol, rule.result.direction), rule.result.state, false);
+            if (rule.type == "io" && rule.trigger.state == state && rule.trigger.symbol == symbol) {
+                return new TMState(curr.tape.writeAtHead(rule.result.symbol), rule.result.state, false);
+            } else if (rule.type == "move" && rule.triggerState == state) {
+                return new TMState(curr.tape.move(rule.direction), rule.resultState, false);
+            }
         }
 
         // No applicable rule, terminate.
@@ -235,13 +282,20 @@ export class TMSpec {
         // Iterate through all of the rules and see if they are applicable to the current state.
         let result: TMState[] = [];
         for (let rule of this.rules) {
-            if (rule.result.state != curr.state) continue;
+            switch (rule.type) {
+                case "io":
+                    if (rule.result.state != curr.state) continue;
+                    if (rule.result.symbol != curr.tape.symbolAtHead()) continue;
+                    
+                    result.push(new TMState(curr.tape.writeAtHead(rule.trigger.symbol), rule.trigger.state, false));
+                    break;
+                case "move":
+                    if (rule.resultState != curr.state) continue;
 
-            let oppDirection = Direction.opposite(rule.result.direction);
-            let ruleSymbol = curr.tape.symbolAt(curr.tape.head + oppDirection);
-            if (rule.result.symbol != ruleSymbol) continue;
-
-            result.push(new TMState(curr.tape.moveAndWrite(oppDirection, rule.trigger.symbol), rule.trigger.state, false));
+                    let oppDirection = Direction.opposite(rule.direction);
+                    result.push(new TMState(curr.tape.move(oppDirection), rule.triggerState, false));
+                    break;
+            }
         }
 
         return result;

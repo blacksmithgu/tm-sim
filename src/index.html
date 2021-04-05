@@ -43,28 +43,41 @@
             <div id="tm-initial" style="display: flex; flex-direction: column;">
                 <div style="display: flex; padding-top: 10px;">
                     <label class="tooltip">Initial State <span class="tooltiptext">The initial state of the Turing Machine.</span></label>
-                    <input id="tm-state-input" type="text" style="flex: 2;">
+                    <input id="tm-state-input" type="text" style="flex: 2;" value="a">
                 </div>
                 <div style="display: flex; padding-top: 10px;">
                     <label class="tooltip">Head Location <span class="tooltiptext">Index on the tape the head will start at.</span></label>
-                    <input id="tm-head-input" type="number" style="flex: 2;">
+                    <input id="tm-head-input" type="number" style="flex: 2;" value="0">
                 </div>
                 <div style="display: flex; padding-top: 10px;">
                 <label class="tooltip">Tape <span class="tooltiptext">Comma separated entries on the starting tape. ex) 0, 0, 0, 1</span></label>
-                <input id="tm-tape-input" type="text" style="flex:2">
+                <input id="tm-tape-input" type="text" style="flex:2" value="1, 1, 1, 0, 1, 0">
                 </div>
             </div>
             <hr width="100%">
             <div id="tm-spec" style="display: flex; flex-direction: column;">
                 <div style="display: flex;">
                     <label class="tooltip">Default Symbol <span class="tooltiptext">The symbol that pads the end of the tape.</span></label>
-                    <input id="tm-spec-default-input" type="text" style="flex: 2;">
+                    <input id="tm-spec-default-input" type="text" style="flex: 2;" value="_">
                 </div>
                 <center><label style="padding-top:10px;" class="tooltip">Rules
                     <span class="tooltiptext">Specify one rule per line.<br> state, value -> new value, direction (L, R), new state<br> ex) a, 0 -> 1, L, b</span>
                 </label></center>
                 <div style="display: flex; height: 100%">
-                    <textarea id="tm-spec-rules-input" style="flex: 1; resize: none;"></textarea>
+                    <textarea id="tm-spec-rules-input" style="flex: 1; resize: none;">
+# Read/write rule: state, symbol -> new symbol, new state
+a, 0 -> 0, b
+a, 1 -> 0, b
+
+# Movement rule: state -> direction, new state
+# direction can be 'L' (left), 'R' (right), 'C' (center/don't move)
+b -> R, a
+
+# If multiple rules match, the earlier of the two rules in the list will be executed.
+
+# Click on a state to see more info, and to simulate forwards/backwards. Use the 'Expand All' button to
+# rapidly expand the computation tree.
+                    </textarea>
                 </div>
                 <center><button id="tm-spec-update" style="margin-top: 10px;">Update</button></center>
                 <center><label id="tm-spec-error" style="color: red; margin-top: 10px; margin-bottom: 10px;"></label></center>
