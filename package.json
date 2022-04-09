@@ -30,7 +30,7 @@
   "dependencies": {
     "@egjs/hammerjs": "^2.0.17",
     "keycharm": "^0.2.0",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "rollup-plugin-copy": "^3.3.0",
     "timsort": "^0.3.0",
     "vis-data": "^6.5.1",
